@@ -23,6 +23,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
+import dmax.dialog.SpotsDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
@@ -94,9 +95,14 @@ public class MainActivity extends AppCompatActivity {
         dialog.setPositiveButton("INICIAR SESIÓN", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+
                         dialogInterface.dismiss();
 
-                        // Comprobar validación
+                        // Hacemos que desaparezca el botón de iniciar sesión mientras esté cargando
+                        btnSignIn.setEnabled(false);
+
+
+                        // Comprobar validación (Ver si el usuario ha introducido los datos)
                         if (TextUtils.isEmpty(edtEmail.getText().toString())) {
                             Snackbar.make(rootLayout, "Por favor, introduzca su email",
                                     Snackbar.LENGTH_SHORT)
@@ -118,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
+                        final SpotsDialog waitingDialog = new SpotsDialog(MainActivity.this);
+                        waitingDialog.show();
+
 
                         // Iniciar sesión
                         auth.signInWithEmailAndPassword(edtEmail.getText().toString(),
@@ -125,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                                 .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                                     @Override
                                     public void onSuccess(AuthResult authResult) {
+                                        waitingDialog.dismiss();
                                         startActivity(new Intent(MainActivity.this,Bienvenido.class));
                                         finish();
                                     }
@@ -132,8 +142,12 @@ public class MainActivity extends AppCompatActivity {
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
+                                        waitingDialog.dismiss();
                                         Snackbar.make(rootLayout, "Fallo al iniciar sesión" + e.getMessage(),
-                                                Snackbar.LENGTH_SHORT);
+                                                Snackbar.LENGTH_SHORT)
+                                                .show();
+                                        // Activamos de nuevo el botón si la carga es fallida
+                                        btnSignIn.setEnabled(true);
                                     }
                                 });
 
@@ -174,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
 
-                // Comprobar validación
+                // Comprobar validación (Ver si el usuario ha introducido los datos)
                 if (TextUtils.isEmpty(edtEmail.getText().toString())){
                     Snackbar.make(rootLayout,"Por favor, introduzca su email",
                             Snackbar.LENGTH_SHORT)
