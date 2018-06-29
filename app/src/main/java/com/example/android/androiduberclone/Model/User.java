@@ -3,7 +3,7 @@ package com.example.android.androiduberclone.Model;
 /**
  * Created by jesus on 23/12/2017.
  */
-
+// Modelo general de usuario
 public class User {
     private String email,password,name,phone;
     public User(){

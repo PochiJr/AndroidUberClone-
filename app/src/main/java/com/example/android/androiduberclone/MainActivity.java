@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Muestra la Cardview con todas las perrerías que hemos incluido en showRegisterDialog();
                 showRegisterDialog();
             }
         });
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Muestra la Cardview con todas las perrerías que hemos incluido en showSignInDialog();
                 showSignInDialog();
             }
         });
@@ -80,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
     private void showSignInDialog() {
 
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        // Título de la Cardview
         dialog.setTitle("INICIAR SESIÓN");
+        // Semitítulo de la Cardview
         dialog.setMessage("Introduzca su email para iniciar sesión");
 
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -91,16 +95,14 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.setView(login_layout);
 
-        // Ponemos el botón
+        // Ponemos dos nuevos botones, uno para confirmar el inicio de sesión y otro para cancelarlo
         dialog.setPositiveButton("INICIAR SESIÓN", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-
                         dialogInterface.dismiss();
 
                         // Hacemos que desaparezca el botón de iniciar sesión mientras esté cargando
                         btnSignIn.setEnabled(false);
-
 
                         // Comprobar validación (Ver si el usuario ha introducido los datos)
                         if (TextUtils.isEmpty(edtEmail.getText().toString())) {
@@ -124,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
+                        // Añadimos los puntos giratorios de carga
                         final SpotsDialog waitingDialog = new SpotsDialog(MainActivity.this);
                         waitingDialog.show();
 
@@ -134,7 +137,9 @@ public class MainActivity extends AppCompatActivity {
                                 .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                                     @Override
                                     public void onSuccess(AuthResult authResult) {
+                                        //Hacemos desaparecer los puntitos giratorios
                                         waitingDialog.dismiss();
+
                                         startActivity(new Intent(MainActivity.this,Bienvenido.class));
                                         finish();
                                     }
@@ -142,7 +147,9 @@ public class MainActivity extends AppCompatActivity {
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
+                                        // Hacemos desaparecer los puntitos giratorios
                                         waitingDialog.dismiss();
+
                                         Snackbar.make(rootLayout, "Fallo al iniciar sesión" + e.getMessage(),
                                                 Snackbar.LENGTH_SHORT)
                                                 .show();
@@ -169,7 +176,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void showRegisterDialog() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        // Título de la Cardiew
         dialog.setTitle("REGISTRARSE");
+        // Semitítulo de la Cardview
         dialog.setMessage("Introduzca su email para registrarse");
 
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -180,9 +189,10 @@ public class MainActivity extends AppCompatActivity {
         final MaterialEditText edtName = register_layout.findViewById(R.id.edtName);
         final MaterialEditText edtPhone = register_layout.findViewById(R.id.edtPhone);
 
+        // Ponemos el mensaje previo en la Cardview
         dialog.setView(register_layout);
 
-        // Ponemos el botón
+        // Ponemos dos nuevos botones, uno para confirmar el registro y otro para cancelarlo
         dialog.setPositiveButton("REGISTRARSE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -223,14 +233,14 @@ public class MainActivity extends AppCompatActivity {
                      .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                          @Override
                          public void onSuccess(AuthResult authResult) {
-                             // Guardar usuario en db
+                             // Guardar y crear usuario en la base de datos (db)
                              User user = new User();
                              user.setEmail(edtEmail.getText().toString());
                              user.setPassword(edtPassword.getText().toString());
                              user.setName(edtName.getText().toString());
                              user.setPhone(edtPhone.getText().toString());
 
-                             // Usamos el UID como key
+                             // Usamos el UID (User ID) como key
                              users.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
                                      .setValue(user)
                                      .addOnSuccessListener(new OnSuccessListener<Void>() {
