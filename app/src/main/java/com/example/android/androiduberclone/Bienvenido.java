@@ -14,11 +14,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.View;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.android.androiduberclone.Common.Common;
@@ -29,9 +26,13 @@ import com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -99,8 +100,8 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
     private Handler handler;
     private LatLng startPosition,endPosition, currentPosition;
     private int index,next;
-    private Button btnGo;
-    private EditText edtPlace;
+    // private Button btnGo;
+    private PlaceAutocompleteFragment places;
     private String destination;
     private PolylineOptions polylineOptions,blackPolylineOptions;
     private Polyline greyPolyline, blackPolyline;
@@ -193,21 +194,32 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
 
         // Inicializamos lo referido a la parte superior de nuestra activity_bienvenido
         polyLineList = new ArrayList<>();
-        btnGo =(Button)findViewById(R.id.btnGo);
-        edtPlace = (EditText)findViewById(R.id.edtPlace);
 
-        btnGo.setOnClickListener(new View.OnClickListener() {
+        // Places API
+        places = (PlaceAutocompleteFragment)getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        places.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
-            public void onClick(View view) {
-                // Obtenemos el lugar de destino en forma de String para usarlo en el método getDirection,
-                // concretamente cuando pongamos el lugar de destino en la URL.
-                destination = edtPlace.getText().toString();
-                destination = destination.replace(" ","+");
-                Log.d("JESÚS", destination);
+            public void onPlaceSelected(Place place) {
+                if (location_switch.isChecked()){
+                    // Obtenemos el lugar de destino en forma de String para usarlo en el método getDirection,
+                    // concretamente cuando pongamos el lugar de destino en la URL.
+                    destination = place.getAddress().toString();
+                    destination.replace(" ","+");
 
-                getDirection();
+                    getDirection();
+
+                } else {
+                    Toast.makeText(Bienvenido.this, "Por favor, cambie su estatus a: ONLINE", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+            @Override
+            public void onError(Status status) {
+                Toast.makeText(Bienvenido.this, ""+status.toString(), Toast.LENGTH_SHORT).show();
             }
         });
+
 
         // Geo Fire
         drivers = FirebaseDatabase.getInstance().getReference("Drivers");
