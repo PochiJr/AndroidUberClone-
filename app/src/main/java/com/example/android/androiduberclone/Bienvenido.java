@@ -70,9 +70,10 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
         LocationListener
 {
 
-    private GoogleMap mMap;
+
 
     //Play Services
+    private GoogleMap mMap;
     private static final int MY_PERMISSION_REQUEST_CODE = 7000;
     private static final int PLAY_SERVICE_RES_REQUEST= 7000;
 
@@ -222,10 +223,11 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
 
 
         // Geo Fire
-        drivers = FirebaseDatabase.getInstance().getReference("Drivers");
+        drivers = FirebaseDatabase.getInstance().getReference(Common.driver_tbl);
         geoFire = new GeoFire(drivers);
 
         setUpLocation();
+
 
         mService = Common.getGoogleAPI();
     }
