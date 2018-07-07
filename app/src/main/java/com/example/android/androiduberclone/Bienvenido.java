@@ -19,6 +19,7 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Toast;
 
 import com.example.android.androiduberclone.Common.Common;
+import com.example.android.androiduberclone.Model.Token;
 import com.example.android.androiduberclone.Remote.IGoogleAPI;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -52,6 +53,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,7 +81,6 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
 
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
-    private Location mLastLocation;
 
     private static int UPDATE_INTERVAL = 5000;
     private static int FATEST_INTERVAL = 3000;
@@ -230,10 +231,21 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
 
 
         mService = Common.getGoogleAPI();
+
+        updateFirebaseToken();
+    }
+
+    private void updateFirebaseToken() {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference(Common.token_tbl);
+
+        Token token = new Token(FirebaseInstanceId.getInstance().getToken());
+        tokens.child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                    .setValue(token);
     }
 
     private void getDirection() {
-        currentPosition = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+        currentPosition = new LatLng(Common.mLastLocation.getLatitude(),Common.mLastLocation.getLongitude());
 
         String requestApi = null;
         try {
@@ -455,11 +467,11 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
         {
             return;
         }
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null)
+        Common.mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if (Common.mLastLocation != null)
             if (location_switch.isChecked()){
-                final double latitude = mLastLocation.getLatitude();
-                final double longitude = mLastLocation.getLongitude();
+                final double latitude = Common.mLastLocation.getLatitude();
+                final double longitude = Common.mLastLocation.getLongitude();
 
                 // Actualizar a Firebase
                 geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(),
@@ -530,7 +542,7 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onLocationChanged(Location location) {
-        mLastLocation = location;
+        Common.mLastLocation = location;
         displayLocation();
 
     }
