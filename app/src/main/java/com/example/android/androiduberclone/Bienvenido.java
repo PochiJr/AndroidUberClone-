@@ -50,9 +50,11 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.SquareCap;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
@@ -109,6 +111,10 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
     private Polyline greyPolyline, blackPolyline;
 
     private IGoogleAPI mService;
+
+    // Sistema de detección de presencia (para detectar desconexión y desconexión del conductor)
+    DatabaseReference onlineRef, currentUserRef;
+
     
     Runnable drawPathRunnable = new Runnable() {
         @Override
@@ -172,23 +178,47 @@ public class Bienvenido extends FragmentActivity implements OnMapReadyCallback,
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // Sistema de detección de presencia
+        onlineRef = FirebaseDatabase.getInstance().getReference().child(".info/connected");
+        currentUserRef = FirebaseDatabase.getInstance().getReference(Common.driver_tbl)
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        onlineRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Nos deshacemos del valor de la dirver_tbl cuando se desconecte el conductor
+                currentUserRef.onDisconnect().removeValue();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
         // Inicializamos la View
         location_switch = (MaterialAnimatedSwitch)findViewById(R.id.location_switch);
         location_switch.setOnCheckedChangeListener(new MaterialAnimatedSwitch.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(boolean isOnline) {
                 if (isOnline){
+                    FirebaseDatabase.getInstance().goOnline(); // De esta manera nos conectamos al activar el switch
+
                     startLocationUpdates();
                     displayLocation();
                     Snackbar.make(mapFragment.getView(),"Estás en línea",Snackbar.LENGTH_SHORT)
                             .show();
                 } else {
+                    FirebaseDatabase.getInstance().goOffline(); //Al revés aquí, al desactivar el Switch nos deconectamos
+
                     stopLocationUpdates();
                     mCurrent.remove();
                     mMap.clear();
-                    handler.removeCallbacks(drawPathRunnable);
-                    Snackbar.make(mapFragment.getView(), "Estás desconectado",Snackbar.LENGTH_SHORT)
-                            .show();
+                    if (handler != null) {
+                        handler.removeCallbacks(drawPathRunnable);
+                        Snackbar.make(mapFragment.getView(), "Estás desconectado", Snackbar.LENGTH_SHORT)
+                                .show();
+                    }
                 }
 
             }
